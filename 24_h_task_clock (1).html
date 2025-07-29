@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>تطبيق الساعة</title>
+  <!-- إضافة خط Cairo من Google Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #fff8f2, #ffe7d6, #ffd2a6);
+      --primary-color: #ff8c42;
+      --accent-color: #ff6f00;
+      --surface: #ffffff;
+      --shadow-light: rgba(255, 255, 255, 0.6);
+      --shadow-dark: rgba(0, 0, 0, 0.1);
+      --tooltip-bg: rgba(255, 255, 255, 0.8);
+      --tooltip-border: rgba(255, 140, 66, 0.4);
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; padding:0; font-family:'Cairo',sans-serif; color:#333; background:var(--bg-gradient); display:flex; flex-direction:column; align-items:center; min-height:100vh; text-align:center; }
+    .clock-container { position:relative; width:90vw; max-width:500px; margin:20px; }
+    #clockCanvas { width:100%; height:auto; background:transparent; border-radius:50%; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light), 8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light); cursor:pointer; display:block; }
+    #tooltip { position:absolute; padding:8px 12px; background:var(--tooltip-bg); border:1px solid var(--tooltip-border); border-radius:8px; font-size:0.9rem; pointer-events:none; white-space:nowrap; display:none; color:#333; box-shadow:4px 4px 8px var(--shadow-dark), -4px -4px 8px var(--shadow-light); }
+    #taskForm { background:var(--surface); border-radius:20px; padding:20px; width:90vw; max-width:400px; margin-bottom:20px; box-shadow:8px 8px 16px var(--shadow-dark), -8px -8px 16px var(--shadow-light); text-align:right; }
+    #taskForm label { display:block; margin:10px 0 5px; font-size:0.9rem; color:#555; font-weight:600; }
+    #taskForm input { width:100%; padding:12px; margin-top:5px; border:none; border-radius:12px; background:var(--surface); box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); color:#333; font-size:1rem; }
+    #taskForm button { width:100%; padding:14px; margin-top:20px; border:none; border-radius:12px; background:var(--accent-color); color:#fff; font-size:1rem; font-weight:600; cursor:pointer; box-shadow:4px 4px 8px var(--shadow-dark); transition:transform 0.2s ease; }
+    #taskForm button:hover { transform:translateY(-2px); box-shadow:6px 6px 12px var(--shadow-dark); }
+    #taskList { list-style:none; padding:0; width:90vw; max-width:400px; margin-bottom:40px; }
+    #taskList li { display:flex; justify-content:space-between; align-items:center; padding:10px; margin-bottom:10px; background:var(--surface); border-radius:12px; box-shadow: inset 4px 4px 8px var(--shadow-dark), inset -4px -4px 8px var(--shadow-light); }
+    #taskList button.delete-btn { padding:6px 12px; border:none; border-radius:8px; background:#e74c3c; color:#fff; cursor:pointer; font-size:0.9rem; }
+    #taskList button.delete-btn:hover { background:#c0392b; }
+  </style>
+</head>
+<body>
+  <div class="clock-container">
+    <canvas id="clockCanvas" width="500" height="500"></canvas>
+    <div id="tooltip"></div>
+  </div>
+  <form id="taskForm">
+    <label for="taskDesc">وصف المهمة:</label>
+    <input type="text" id="taskDesc" placeholder="مثال: قراءة القرآن" required>
+    <label for="startTime">من:</label>
+    <input type="time" id="startTime" required>
+    <label for="endTime">إلى:</label>
+    <input type="time" id="endTime" required>
+    <button type="submit">أضف المهمة</button>
+  </form>
+  <ul id="taskList"></ul>
+
+  <script>
+    const tasks = JSON.parse(localStorage.getItem('tasks') || '[]');
+    const canvas = document.getElementById('clockCanvas');
+    const tooltip = document.getElementById('tooltip');
+    const ctx = canvas.getContext('2d');
+    const radius = canvas.width / 2;
+    ctx.translate(radius, radius);
+    const arcRadius = radius - 100;
+
+    function saveTasks() { localStorage.setItem('tasks', JSON.stringify(tasks)); }
+    function drawClock() {
+      ctx.clearRect(-radius, -radius, canvas.width, canvas.height);
+      ctx.beginPath(); ctx.arc(0, 0, radius - 5, 0, 2 * Math.PI);
+      ctx.strokeStyle = '#ff6f00'; ctx.lineWidth = 4; ctx.stroke();
+      ctx.font = '16px Cairo'; ctx.textBaseline = 'middle'; ctx.textAlign = 'center';
+      for (let h = 0; h < 24; h++) {
+        const ang = (h / 24) * 2 * Math.PI - Math.PI / 2;
+        const x1 = Math.cos(ang) * (radius - 20);
+        const y1 = Math.sin(ang) * (radius - 20);
+        const x2 = Math.cos(ang) * (radius - 40);
+        const y2 = Math.sin(ang) * (radius - 40);
+        ctx.save(); ctx.strokeStyle = '#ff6f00'; ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke(); ctx.restore();
+        const lx = Math.cos(ang) * (radius - 60);
+        const ly = Math.sin(ang) * (radius - 60);
+        ctx.fillStyle = '#333'; ctx.fillText(String(h).padStart(2,'0'), lx, ly);
+      }
+    }
+    function drawTasks() {
+      tasks.forEach(task => {
+        const [h1, m1] = task.start.split(':').map(Number);
+        const [h2, m2] = task.end.split(':').map(Number);
+        const startAng = ((h1 * 60 + m1) / 1440) * 2 * Math.PI - Math.PI / 2;
+        const endAng = ((h2 * 60 + m2) / 1440) * 2 * Math.PI - Math.PI / 2;
+        task.startAng = startAng; task.endAng = endAng;
+        ctx.save(); ctx.lineWidth = 20; ctx.strokeStyle = task.color;
+        ctx.beginPath(); ctx.arc(0, 0, arcRadius, startAng, endAng); ctx.stroke(); ctx.restore();
+      });
+    }
+    function render() { drawClock(); drawTasks(); updateTaskList(); }
+    function updateTaskList() {
+      const list = document.getElementById('taskList'); list.innerHTML = '';
+      tasks.forEach((task, i) => {
+        const li = document.createElement('li'); li.textContent = `${task.desc} (${task.start} - ${task.end})`;
+        const btn = document.createElement('button'); btn.textContent='حذف'; btn.className='delete-btn';
+        btn.onclick=()=>{ tasks.splice(i,1); saveTasks(); render(); };
+        li.appendChild(btn); list.appendChild(li);
+      });
+    }
+    canvas.addEventListener('mousemove', e => {
+      const rect=canvas.getBoundingClientRect(), x=e.clientX-rect.left-radius, y=e.clientY-rect.top-radius;
+      let found=false; const dist=Math.hypot(x,y);
+      tasks.forEach(task=>{
+        const angle=Math.atan2(y,x), ang=angle< -Math.PI/2? angle+2*Math.PI:angle;
+        const start=task.startAng< -Math.PI/2? task.startAng+2*Math.PI:task.startAng;
+        const end=task.endAng< -Math.PI/2? task.endAng+2*Math.PI:task.endAng;
+        if(dist>arcRadius-10&&dist<arcRadius+10&&ang>=start&&ang<=end){
+          tooltip.style.left=e.clientX+10+'px';tooltip.style.top=e.clientY+10+'px';
+          tooltip.textContent=task.desc;tooltip.style.display='block';found=true;
+        }
+      }); if(!found) tooltip.style.display='none';
+    });
+    canvas.addEventListener('mouseout',()=>tooltip.style.display='none');
+    document.getElementById('taskForm').addEventListener('submit',e=>{
+      e.preventDefault();
+      const desc=document.getElementById('taskDesc').value;
+      const start=document.getElementById('startTime').value;
+      const end=document.getElementById('endTime').value;
+      tasks.push({desc,start,end,color:'#ff8c42'});saveTasks();render();e.target.reset();
+    });
+    render();
+  </script>
+</body>
+</html>
