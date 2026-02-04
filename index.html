@@ -1,331 +1,244 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>نظام تسجيل شكاوى الطلاب</title>
-    <style>
-        /* CSS Styles */
-        body {
-            font-family: 'Tajawal', sans-serif;
-            background-color: #f4f7f6;
-            color: #333;
-            margin: 0;
-            padding: 20px;
-        }
-        .container {
-            max-width: 900px;
-            margin: auto;
-            background: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
-        }
-        h1 {
-            text-align: center;
-            color: #0056b3;
-        }
-        #add-complaint-btn {
-            background-color: #007bff;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            font-size: 16px;
-            display: block;
-            margin: 20px 0;
-        }
-        #add-complaint-btn:hover {
-            background-color: #0056b3;
-        }
-        .complaints-list {
-            list-style: none;
-            padding: 0;
-        }
-        .complaint-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid #eee;
-        }
-        .complaint-item:last-child {
-            border-bottom: none;
-        }
-        .complaint-info span {
-            margin-left: 15px;
-            font-size: 18px;
-        }
-        .complaint-actions button {
-            margin-right: 10px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-        .view-btn { background-color: #17a2b8; color: white; }
-        .edit-btn { background-color: #ffc107; color: white; }
-        .delete-btn { background-color: #dc3545; color: white; }
-
-        /* Modal Styles */
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            overflow: auto;
-            background-color: rgba(0,0,0,0.4);
-        }
-        .modal-content {
-            background-color: #fefefe;
-            margin: 10% auto;
-            padding: 20px;
-            border: 1px solid #888;
-            width: 80%;
-            max-width: 500px;
-            border-radius: 8px;
-            position: relative;
-        }
-        .close-btn {
-            color: #aaa;
-            position: absolute;
-            left: 15px;
-            top: 10px;
-            font-size: 28px;
-            font-weight: bold;
-            cursor: pointer;
-        }
-        .modal-content h2 {
-            text-align: center;
-        }
-        .modal-content form input, 
-        .modal-content form select, 
-        .modal-content form textarea {
-            width: 100%;
-            padding: 10px;
-            margin-bottom: 15px;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            box-sizing: border-box;
-        }
-        .modal-content form button {
-            width: 100%;
-            background-color: #28a745;
-            color: white;
-            padding: 14px 20px;
-            margin: 8px 0;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-        #complaint-details-card .detail-item {
-            padding: 10px;
-            border-bottom: 1px solid #eee;
-        }
-         #complaint-details-card .detail-item strong {
-            display: inline-block;
-            width: 120px;
-            color: #0056b3;
-         }
-    </style>
-    <!-- Google Fonts for Arabic -->
+    <title>تطبيق الوقت الإسلامي</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;700&display=swap" rel="stylesheet">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&family=Outfit:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js for Sleep Graphs -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
+
 <body>
+    <div class="app-container">
+        <!-- Background Pattern -->
+        <div class="islamic-pattern"></div>
 
-    <div class="container">
-        <h1>نظام تسجيل شكاوى الطلاب</h1>
-        <button id="add-complaint-btn">إضافة شكوى جديدة</button>
-        <ul id="complaints-list" class="complaints-list">
-            <!-- الشكاوى ستظهر هنا عبر JavaScript -->
-        </ul>
+        <!-- Global Decoration -->
+        <div class="clock-decoration"></div>
+
+        <!-- Header -->
+        <header class="app-header">
+            <button id="dev-mode-btn" class="dev-btn"><i class="fas fa-code"></i></button>
+            <h1>الوقت</h1>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="content-area">
+            <!-- Clock Section -->
+            <section id="clock-section" class="active-section">
+                <div class="clock-display">
+                    <div class="time-wrapper">
+                        <span id="hours">00</span>:<span id="minutes">00</span>
+                    </div>
+                    <div class="seconds-wrapper">
+                        <span id="seconds">00</span> <span id="ampm">ص</span>
+                    </div>
+                    <div class="date-wrapper">
+                        <div class="date-pill">
+                            <i class="fas fa-moon"></i>
+                            <span id="hijri-date">...</span>
+                        </div>
+                        <div class="date-pill">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span id="gregorian-date">...</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Alarm Section -->
+            <section id="alarm-section">
+                <div class="section-title">المنبه</div>
+                <div class="alarm-list" id="alarm-list">
+                    <!-- Alarms will be added here -->
+                    <div class="empty-state">لا توجد منبهات</div>
+                </div>
+                <button class="fab-btn" id="add-alarm-btn"><i class="fas fa-plus"></i></button>
+            </section>
+
+            <!-- Timer Section -->
+            <section id="timer-section">
+                <div class="section-title">المؤقت</div>
+                <div class="timer-display">
+                    <div class="timer-inputs">
+                        <input type="number" id="timer-hours" placeholder="00" min="0" max="99">
+                        <span>:</span>
+                        <input type="number" id="timer-minutes" placeholder="00" min="0" max="59">
+                        <span>:</span>
+                        <input type="number" id="timer-seconds" placeholder="00" min="0" max="59">
+                    </div>
+                    <div class="timer-countdown hidden" id="timer-countdown">
+                        00:00:00
+                    </div>
+                </div>
+                <div class="controls">
+                    <button class="control-btn start" id="timer-start"><i class="fas fa-play"></i></button>
+                    <button class="control-btn pause hidden" id="timer-pause"><i class="fas fa-pause"></i></button>
+                    <button class="control-btn reset" id="timer-reset"><i class="fas fa-undo"></i></button>
+                </div>
+            </section>
+
+            <!-- Sleep Tracking Section -->
+            <section id="sleep-section">
+                <div class="section-title">مراقب النوم</div>
+
+                <div class="sleep-dashboard">
+                    <!-- Status Card -->
+                    <div class="status-card" id="status-card">
+                        <div class="status-icon"><i class="fas fa-eye"></i></div>
+                        <div class="status-text">
+                            <span class="status-label">الحالة الحالية</span>
+                            <span id="current-state">مستيقظ</span>
+                        </div>
+                    </div>
+
+                    <!-- Timers Grid -->
+                    <div class="timers-grid">
+                        <div class="timer-card primary">
+                            <span class="timer-label">مدة النوم الفعلي</span>
+                            <div class="timer-value" id="sleep-duration">00:00:00</div>
+                        </div>
+                        <div class="timer-card secondary">
+                            <span class="timer-label">مدة التتبع</span>
+                            <div class="timer-value" id="total-tracking-time">00:00:00</div>
+                        </div>
+                    </div>
+
+                    <!-- Graph Container -->
+                    <div class="sleep-chart-container hidden" id="chart-container">
+                        <canvas id="sleepChart"></canvas>
+                    </div>
+
+                    <div class="manual-controls hidden" id="manual-controls">
+                        <button class="manual-btn" id="manual-wake-btn">
+                            <i class="fas fa-sun"></i>
+                            <span>انا مستيقظ (يدوي)</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="controls main-controls">
+                    <button class="control-btn start" id="sleep-start-btn">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                    <button class="control-btn pause hidden" id="sleep-stop-btn">
+                        <i class="fas fa-stop"></i>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Stopwatch Section --> <!-- Keeping original order -->
+            <section id="stopwatch-section">
+                <div class="section-title">ساعة الإيقاف</div>
+                <div class="stopwatch-display" id="stopwatch-display">
+                    00:00.00
+                </div>
+                <div class="controls">
+                    <button class="control-btn start" id="stopwatch-start"><i class="fas fa-play"></i></button>
+                    <button class="control-btn pause hidden" id="stopwatch-pause"><i class="fas fa-pause"></i></button>
+                    <button class="control-btn reset" id="stopwatch-reset"><i class="fas fa-undo"></i></button>
+                    <button class="control-btn lap" id="stopwatch-lap"><i class="fas fa-flag"></i></button>
+                </div>
+                <div class="laps-list" id="laps-list"></div>
+            </section>
+        </main>
+
+        <!-- Navigation Bar -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-target="clock-section">
+                <i class="fas fa-clock"></i>
+                <span>الساعة</span>
+            </button>
+            <button class="nav-item" data-target="alarm-section">
+                <i class="fas fa-bell"></i>
+                <span>المنبه</span>
+            </button>
+            <button class="nav-item" data-target="sleep-section">
+                <i class="fas fa-bed"></i>
+                <span>النوم</span>
+            </button>
+            <button class="nav-item" data-target="timer-section">
+                <i class="fas fa-hourglass-half"></i>
+                <span>المؤقت</span>
+            </button>
+            <button class="nav-item" data-target="stopwatch-section">
+                <i class="fas fa-stopwatch"></i>
+                <span>الإيقاف</span>
+            </button>
+        </nav>
     </div>
 
-    <!-- The Modal for Adding/Editing Complaint -->
-    <div id="complaint-modal" class="modal">
+    <!-- Alarm Modal -->
+    <div id="alarm-modal" class="modal hidden">
         <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2 id="modal-title">إضافة شكوى جديدة</h2>
-            <form id="complaint-form">
-                <input type="hidden" id="complaint-id">
-                <input type="text" id="student-name" placeholder="اسم الطالب" required>
-                <input type="text" id="student-class" placeholder="الصف" required>
-                <input type="text" id="student-section" placeholder="الشعبة" required>
-                <select id="complaint-type" required>
-                    <option value="" disabled selected>اختر نوع الشكوى</option>
-                    <option value="أكاديمية">أكاديمية</option>
-                    <option value="سلوكية">سلوكية</option>
-                    <option value="إدارية">إدارية</option>
-                    <option value="أخرى">أخرى</option>
-                </select>
-                <textarea id="complaint-description" rows="4" placeholder="وصف الشكوى" required></textarea>
-                <textarea id="complaint-notes" rows="2" placeholder="ملاحظات (اختياري)"></textarea>
-                <button type="submit" id="save-complaint-btn">حفظ الشكوى</button>
-            </form>
-        </div>
-    </div>
-
-    <!-- The Modal for Viewing Complaint Details -->
-    <div id="details-modal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>تفاصيل الشكوى</h2>
-            <div id="complaint-details-card">
-                <!-- تفاصيل الشكوى ستظهر هنا -->
+            <h3>اضافة منبه جديد</h3>
+            <div class="time-picker">
+                <input type="time" id="alarm-time-input">
+            </div>
+            <div class="modal-actions">
+                <button id="cancel-alarm" class="modal-btn cancel">إلغاء</button>
+                <button id="save-alarm" class="modal-btn save">حفظ</button>
             </div>
         </div>
     </div>
 
-    <script>
-        // JavaScript Logic
-        document.addEventListener('DOMContentLoaded', () => {
-            const addComplaintBtn = document.getElementById('add-complaint-btn');
-            const complaintModal = document.getElementById('complaint-modal');
-            const detailsModal = document.getElementById('details-modal');
-            const closeModalBtns = document.querySelectorAll('.close-btn');
-            const complaintForm = document.getElementById('complaint-form');
-            const complaintsList = document.getElementById('complaints-list');
-            const modalTitle = document.getElementById('modal-title');
-            const complaintIdInput = document.getElementById('complaint-id');
+    <!-- Alarm Ringing Overlay -->
+    <!-- Sensor Test Modal -->
+    <div id="sensor-modal" class="modal hidden">
+        <div class="modal-content sensor-content">
+            <h3>اختبار الحساسات</h3>
+            <button id="enable-sensors-btn" class="modal-btn save"
+                style="width:100%; margin-bottom:15px; background:var(--primary-light)">تفعيل الحساسات (اضغط
+                هنا)</button>
+            <div class="sensor-readout">
+                <div class="axis-row">
+                    <span>Motion X:</span> <span id="acc-x" class="mono">0.00</span>
+                </div>
+                <div class="axis-row">
+                    <span>Motion Y:</span> <span id="acc-y" class="mono">0.00</span>
+                </div>
+                <div class="axis-row">
+                    <span>Motion Z:</span> <span id="acc-z" class="mono">0.00</span>
+                </div>
+                <div class="axis-row highlight">
+                    <span>الحركة:</span> <span id="acc-total" class="mono">0.00</span>
+                </div>
+                <hr style="border-color:var(--glass-border); margin:10px 0;">
+                <div class="axis-row">
+                    <span>Alpha (Tilt):</span> <span id="orient-alpha" class="mono">0</span>
+                </div>
+                <div class="axis-row">
+                    <span>Beta (Tilt):</span> <span id="orient-beta" class="mono">0</span>
+                </div>
+                <div class="axis-row">
+                    <span>Gamma (Tilt):</span> <span id="orient-gamma" class="mono">0</span>
+                </div>
+            </div>
+            <div class="sensor-graph-bar">
+                <div id="sensor-bar-fill" style="width: 0%"></div>
+            </div>
+            <p id="sensor-status" style="font-size:0.8rem; color:#ef5350;">ملاحظة: يتطلب HTTPS أو localhost</p>
+            <button id="close-sensor-modal" class="modal-btn cancel" style="width:100%; margin-top:15px">إغلاق</button>
+        </div>
+    </div>
 
-            // جلب البيانات من Local Storage أو استخدام مصفوفة فارغة
-            let complaints = JSON.parse(localStorage.getItem('complaints')) || [];
+    <div id="alarm-ringing" class="ringing-overlay hidden">
+        <div class="ringing-content">
+            <i class="fas fa-bell fa-shake"></i>
+            <h2>وقت التنبيه!</h2>
+            <button id="stop-alarm" class="stop-alarm-btn">إيقاف</button>
+        </div>
+    </div>
 
-            // عرض الشكاوى عند تحميل الصفحة
-            const renderComplaints = () => {
-                complaintsList.innerHTML = '';
-                if (complaints.length === 0) {
-                    complaintsList.innerHTML = '<p style="text-align:center;">لا توجد شكاوى حالياً.</p>';
-                    return;
-                }
-                complaints.forEach(complaint => {
-                    const li = document.createElement('li');
-                    li.className = 'complaint-item';
-                    li.setAttribute('data-id', complaint.id);
-                    li.innerHTML = `
-                        <div class="complaint-info">
-                            <span>${complaint.name}</span>
-                            <span>صف: ${complaint.class}</span>
-                            <span>شعبة: ${complaint.section}</span>
-                        </div>
-                        <div class="complaint-actions">
-                            <button class="view-btn">رؤية التفاصيل</button>
-                            <button class="edit-btn">تعديل</button>
-                            <button class="delete-btn">حذف</button>
-                        </div>
-                    `;
-                    complaintsList.appendChild(li);
-                });
-            };
-
-            // حفظ الشكاوى في Local Storage
-            const saveComplaints = () => {
-                localStorage.setItem('complaints', JSON.stringify(complaints));
-            };
-
-            // فتح نافذة الإضافة/التعديل
-            addComplaintBtn.onclick = () => {
-                modalTitle.textContent = 'إضافة شكوى جديدة';
-                complaintForm.reset();
-                complaintIdInput.value = '';
-                complaintModal.style.display = 'block';
-            };
-            
-            // إغلاق النوافذ
-            closeModalBtns.forEach(btn => {
-                btn.onclick = () => {
-                    complaintModal.style.display = 'none';
-                    detailsModal.style.display = 'none';
-                };
-            });
-            window.onclick = (event) => {
-                if (event.target == complaintModal || event.target == detailsModal) {
-                    complaintModal.style.display = 'none';
-                    detailsModal.style.display = 'none';
-                }
-            };
-
-            // التعامل مع إضافة أو تعديل الشكوى
-            complaintForm.addEventListener('submit', (e) => {
-                e.preventDefault();
-                const id = complaintIdInput.value;
-                const complaintData = {
-                    name: document.getElementById('student-name').value,
-                    class: document.getElementById('student-class').value,
-                    section: document.getElementById('student-section').value,
-                    type: document.getElementById('complaint-type').value,
-                    description: document.getElementById('complaint-description').value,
-                    notes: document.getElementById('complaint-notes').value,
-                    date: new Date().toLocaleDateString('ar-EG'),
-                };
-
-                if (id) {
-                    // تعديل
-                    const index = complaints.findIndex(c => c.id == id);
-                    complaints[index] = { ...complaints[index], ...complaintData };
-                } else {
-                    // إضافة جديدة
-                    complaintData.id = Date.now(); // استخدام timestamp كمعرف فريد
-                    complaints.push(complaintData);
-                }
-                
-                saveComplaints();
-                renderComplaints();
-                complaintModal.style.display = 'none';
-            });
-
-            // التعامل مع أزرار (التفاصيل، التعديل، الحذف)
-            complaintsList.addEventListener('click', (e) => {
-                const target = e.target;
-                const li = target.closest('.complaint-item');
-                const id = li.getAttribute('data-id');
-                const complaint = complaints.find(c => c.id == id);
-
-                if (target.classList.contains('view-btn')) {
-                    const detailsCard = document.getElementById('complaint-details-card');
-                    detailsCard.innerHTML = `
-                        <div class="detail-item"><strong>الصف:</strong> ${complaint.class} &nbsp;&nbsp; <strong>الشعبة:</strong> ${complaint.section}</div>
-                        <div class="detail-item"><strong>اسم الطالب:</strong> ${complaint.name}</div>
-                        <div class="detail-item"><strong>نوع الشكوى:</strong> ${complaint.type}</div>
-                        <div class="detail-item"><strong>تاريخها:</strong> ${complaint.date}</div>
-                        <div class="detail-item"><strong>وصف الشكوى:</strong> <p>${complaint.description}</p></div>
-                        <div class="detail-item"><strong>ملاحظات:</strong> <p>${complaint.notes || 'لا يوجد'}</p></div>
-                    `;
-                    detailsModal.style.display = 'block';
-                }
-
-                if (target.classList.contains('edit-btn')) {
-                    modalTitle.textContent = 'تعديل الشكوى';
-                    complaintIdInput.value = complaint.id;
-                    document.getElementById('student-name').value = complaint.name;
-                    document.getElementById('student-class').value = complaint.class;
-                    document.getElementById('student-section').value = complaint.section;
-                    document.getElementById('complaint-type').value = complaint.type;
-                    document.getElementById('complaint-description').value = complaint.description;
-                    document.getElementById('complaint-notes').value = complaint.notes;
-                    complaintModal.style.display = 'block';
-                }
-
-                if (target.classList.contains('delete-btn')) {
-                    if (confirm('هل أنت متأكد من حذف هذه الشكوى؟')) {
-                        complaints = complaints.filter(c => c.id != id);
-                        saveComplaints();
-                        renderComplaints();
-                    }
-                }
-            });
-
-            // العرض الأولي للشكاوى
-            renderComplaints();
-        });
-    </script>
-
+    <script src="script.js"></script>
 </body>
+
 </html>
