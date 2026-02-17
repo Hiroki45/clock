@@ -4,241 +4,908 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>تطبيق الوقت الإسلامي</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link
-        href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;700&family=Outfit:wght@300;400;700&display=swap"
-        rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Chart.js for Sleep Graphs -->
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>منظم مراجعة التوجيهي - النسخة المطورة</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🍀</text></svg>">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: '#ecfdf5',
+                            100: '#d1fae5',
+                            500: '#10b981',
+                            600: '#059669',
+                            700: '#047857',
+                            900: '#064e3b',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Tajawal', sans-serif;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        .dashboard-card {
+            background: linear-gradient(135deg, #059669 0%, #047857 100%);
+        }
+
+        .progress-step {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: bold;
+            border: 2px solid;
+            transition: all 0.2s;
+        }
+
+        .step-done {
+            background-color: #10b981;
+            color: white;
+            border-color: #059669;
+            cursor: pointer;
+        }
+
+        .step-pending {
+            background-color: #ef4444;
+            color: white;
+            border-color: #b91c1c;
+            box-shadow: 0 0 8px rgba(239, 68, 68, 0.6);
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+
+        .step-future {
+            background-color: #e5e7eb;
+            color: #9ca3af;
+            border-color: #d1d5db;
+            cursor: not-allowed;
+        }
+
+        /* Dark mode overrides for steps */
+        .dark .step-future {
+            background-color: #374151;
+            color: #6b7280;
+            border-color: #4b5563;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        /* Calendar Styles */
+        .calendar-day {
+            aspect-ratio: 1;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .calendar-day:hover {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+
+        .dark .calendar-day:hover {
+            background-color: rgba(16, 185, 129, 0.2);
+        }
+
+        .calendar-day.active {
+            background-color: #10b981;
+            color: white;
+            box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.4);
+        }
+
+        .calendar-day.is-today {
+            border: 2px solid #10b981;
+            /* Green border for today */
+            font-weight: bold;
+        }
+
+        .calendar-day.active.is-today {
+            border: 2px solid white;
+            /* White border if today is selected */
+        }
+
+        /* Event dots based on count */
+        .has-event-low::after,
+        .has-event-med::after,
+        .has-event-high::after {
+            content: '';
+            display: block;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            margin: 2px auto 0;
+        }
+
+        .has-event-low::after {
+            background-color: #10b981;
+        }
+
+        /* Green */
+        .has-event-med::after {
+            background-color: #f59e0b;
+        }
+
+        /* Orange */
+        .has-event-high::after {
+            background-color: #ef4444;
+        }
+
+        /* Red */
+
+        /* Difficulty Colors */
+        .diff-default {
+            color: inherit;
+        }
+
+        .diff-low {
+            color: #10b981 !important;
+        }
+
+        /* Green */
+        .diff-medium {
+            color: #f59e0b !important;
+        }
+
+        /* Orange */
+        .diff-high {
+            color: #ef4444 !important;
+        }
+
+        /* Red */
+
+        .active.has-event-low::after,
+        .active.has-event-med::after,
+        .active.has-event-high::after {
+            background-color: white;
+        }
+    </style>
 </head>
 
-<body>
-    <div class="app-container">
-        <!-- Background Pattern -->
-        <div class="islamic-pattern"></div>
+<body class="bg-gray-50 text-gray-800 dark:bg-gray-900 dark:text-gray-100 p-4 md:p-8 min-h-screen">
 
-        <!-- Global Decoration -->
-        <div class="clock-decoration"></div>
+    <div class="max-w-6xl mx-auto mb-6 flex justify-between items-center">
+        <h1 class="text-2xl font-bold text-primary-700 dark:text-primary-500 flex items-center gap-2">
+            <span>🌿</span> منظم التوجيهي الذكي
+        </h1>
+        <button onclick="toggleTheme()"
+            class="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm border border-gray-200 dark:border-gray-700 text-xl hover:scale-110 transition-transform">
+            <span id="themeIcon">🌙</span>
+        </button>
+    </div>
 
-        <!-- Header -->
-        <header class="app-header">
-            <button id="dev-mode-btn" class="dev-btn"><i class="fas fa-code"></i></button>
-            <h1>الوقت</h1>
-        </header>
+    <div class="max-w-6xl mx-auto space-y-8">
 
-        <!-- Main Content Area -->
-        <main class="content-area">
-            <!-- Clock Section -->
-            <section id="clock-section" class="active-section">
-                <div class="clock-display">
-                    <div class="time-wrapper">
-                        <span id="hours">00</span>:<span id="minutes">00</span>
+        <div id="dailyDashboard" class="dashboard-card text-white p-6 rounded-3xl shadow-lg relative overflow-hidden">
+            <div class="relative z-10">
+                <div class="flex items-center gap-3 mb-2">
+                    <span class="text-3xl">📅</span>
+                    <h2 class="text-xl opacity-90 font-medium">نظرة عامة لليوم</h2>
+                </div>
+                <h1 id="dailyGreeting" class="text-3xl font-bold mb-4">جاري التحميل...</h1>
+
+                <div id="dailySummary"
+                    class="bg-white/20 backdrop-blur-md rounded-xl p-4 inline-block text-sm md:text-base border border-white/10">
+                </div>
+            </div>
+            <div class="absolute right-0 top-0 opacity-10 pointer-events-none">
+                <svg width="300" height="300" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+                    <path fill="#FFFFFF"
+                        d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,81.6,-46.6C91.4,-34.1,98.1,-19.2,95.8,-5.3C93.5,8.6,82.2,21.5,70.6,32.3C59,43.1,47.1,51.8,35.1,58.3C23.1,64.8,11.1,69.1,-2.1,72.7C-15.3,76.3,-29.4,79.2,-41.6,73.8C-53.8,68.4,-64.1,54.7,-71.4,40.1C-78.7,25.5,-83.1,10,-81.4,-4.6C-79.7,-19.2,-71.9,-32.9,-61.2,-42.6C-50.5,-52.3,-36.9,-58,-23.7,-65.8C-10.5,-73.6,2.3,-83.5,15.7,-85.4C29.1,-87.3,43.1,-81.2,44.7,-76.4Z"
+                        transform="translate(100 100)" />
+                </svg>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div id="prog-history"
+                class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-700 dark:text-gray-200 text-lg">تاريخ الأردن</h3>
+                        <p class="text-xs text-gray-400">الهدف: 18 درس</p>
                     </div>
-                    <div class="seconds-wrapper">
-                        <span id="seconds">00</span> <span id="ampm">ص</span>
-                    </div>
-                    <div class="date-wrapper">
-                        <div class="date-pill">
-                            <i class="fas fa-moon"></i>
-                            <span id="hijri-date">...</span>
-                        </div>
-                        <div class="date-pill">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span id="gregorian-date">...</span>
-                        </div>
+                    <div
+                        class="h-10 w-10 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold">
+                        📜
                     </div>
                 </div>
-            </section>
-
-            <!-- Alarm Section -->
-            <section id="alarm-section">
-                <div class="section-title">المنبه</div>
-                <div class="alarm-list" id="alarm-list">
-                    <!-- Alarms will be added here -->
-                    <div class="empty-state">لا توجد منبهات</div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                    <div id="bar-history" class="bg-primary-500 h-3 rounded-full transition-all duration-1000"
+                        style="width: 0%"></div>
                 </div>
-                <button class="fab-btn" id="add-alarm-btn"><i class="fas fa-plus"></i></button>
-            </section>
+                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    <span id="stat-history-count">0 / 18</span>
+                    <span id="stat-history-rate">-- درس/يوم</span>
+                </div>
+                <div id="pred-history"
+                    class="mt-3 text-xs bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-center text-gray-600 dark:text-gray-300">
+                    جاري الحساب...
+                </div>
+            </div>
 
-            <!-- Timer Section -->
-            <section id="timer-section">
-                <div class="section-title">المؤقت</div>
-                <div class="timer-display">
-                    <div class="timer-inputs">
-                        <input type="number" id="timer-hours" placeholder="00" min="0" max="99">
-                        <span>:</span>
-                        <input type="number" id="timer-minutes" placeholder="00" min="0" max="59">
-                        <span>:</span>
-                        <input type="number" id="timer-seconds" placeholder="00" min="0" max="59">
+            <div id="prog-islamic"
+                class="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 hidden">
+                <div class="flex justify-between items-start mb-4">
+                    <div>
+                        <h3 class="font-bold text-gray-700 dark:text-gray-200 text-lg">التربية الإسلامية</h3>
+                        <p class="text-xs text-gray-400">الهدف: 25 درس</p>
                     </div>
-                    <div class="timer-countdown hidden" id="timer-countdown">
-                        00:00:00
+                    <div
+                        class="h-10 w-10 bg-primary-100 dark:bg-primary-900 rounded-full flex items-center justify-center text-primary-600 dark:text-primary-300 font-bold">
+                        🕌
                     </div>
                 </div>
-                <div class="controls">
-                    <button class="control-btn start" id="timer-start"><i class="fas fa-play"></i></button>
-                    <button class="control-btn pause hidden" id="timer-pause"><i class="fas fa-pause"></i></button>
-                    <button class="control-btn reset" id="timer-reset"><i class="fas fa-undo"></i></button>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3 mb-2">
+                    <div id="bar-islamic" class="bg-primary-500 h-3 rounded-full transition-all duration-1000"
+                        style="width: 0%"></div>
                 </div>
-            </section>
+                <div class="flex justify-between text-xs text-gray-500 dark:text-gray-400 mt-3">
+                    <span id="stat-islamic-count">0 / 25</span>
+                    <span id="stat-islamic-rate">-- درس/يوم</span>
+                </div>
+                <div id="pred-islamic"
+                    class="mt-3 text-xs bg-gray-50 dark:bg-gray-700/50 p-2 rounded text-center text-gray-600 dark:text-gray-300">
+                    جاري الحساب...
+                </div>
+            </div>
+        </div>
 
-            <!-- Sleep Tracking Section -->
-            <section id="sleep-section">
-                <div class="section-title">مراقب النوم</div>
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                <div class="sleep-dashboard">
-                    <!-- Status Card -->
-                    <div class="status-card" id="status-card">
-                        <div class="status-icon"><i class="fas fa-eye"></i></div>
-                        <div class="status-text">
-                            <span class="status-label">الحالة الحالية</span>
-                            <span id="current-state">مستيقظ</span>
-                        </div>
+            <div
+                class="lg:col-span-1 bg-white dark:bg-gray-800 p-4 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 h-fit">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold text-gray-700 dark:text-gray-200">التقويم</h3>
+                    <div class="flex gap-2">
+                        <button onclick="changeMonth(-1)"
+                            class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">◀</button>
+                        <span id="calMonthName" class="text-sm font-bold w-24 text-center">...</span>
+                        <button onclick="changeMonth(1)"
+                            class="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded">▶</button>
                     </div>
+                </div>
 
-                    <!-- Timers Grid -->
-                    <div class="timers-grid">
-                        <div class="timer-card primary">
-                            <span class="timer-label">مدة النوم الفعلي</span>
-                            <div class="timer-value" id="sleep-duration">00:00:00</div>
-                        </div>
-                        <div class="timer-card secondary">
-                            <span class="timer-label">مدة التتبع</span>
-                            <div class="timer-value" id="total-tracking-time">00:00:00</div>
-                        </div>
+                <div class="grid grid-cols-7 text-center text-xs text-gray-400 mb-2 font-bold">
+                    <div>أحد</div>
+                    <div>إثنين</div>
+                    <div>ثلاثاء</div>
+                    <div>أربعاء</div>
+                    <div>خميس</div>
+                    <div>جمعة</div>
+                    <div>سبت</div>
+                </div>
+
+                <div id="calendarGrid" class="grid grid-cols-7 text-center gap-1 text-sm">
+                </div>
+
+                <div class="mt-4 pt-4 border-t dark:border-gray-700">
+                    <h4 id="selectedDateTitle" class="text-xs font-bold text-primary-600 mb-2">مراجعات اليوم المحدد:
+                    </h4>
+                    <div id="calendarTasks" class="space-y-2 max-h-40 overflow-y-auto">
+                        <p class="text-xs text-gray-400 text-center py-2">اضغط على يوم لعرض المهام</p>
                     </div>
+                </div>
+            </div>
 
-                    <!-- Graph Container -->
-                    <div class="sleep-chart-container hidden" id="chart-container">
-                        <canvas id="sleepChart"></canvas>
+            <div class="lg:col-span-2">
+                <h3 class="font-bold text-gray-700 dark:text-gray-200 mb-4 flex items-center gap-2">
+                    <span class="w-2 h-6 bg-red-500 rounded-full"></span>
+                    مستحق اليوم (الأولوية القصوى)
+                </h3>
+                <div id="todayTasksContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                </div>
+                <div id="noTasksMsg"
+                    class="hidden text-center py-10 bg-white dark:bg-gray-800 rounded-2xl border border-dashed border-gray-300 dark:border-gray-700">
+                    <span class="text-4xl block mb-2">🎉</span>
+                    <p class="text-gray-500 dark:text-gray-400">لا يوجد مراجعات مستحقة اليوم!</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700">
+            <h2 class="text-lg font-bold mb-4 text-primary-700 dark:text-primary-400 flex items-center">
+                <span class="bg-primary-100 dark:bg-primary-900/30 p-2 rounded-lg ml-3">📚</span>
+                إضافة درس جديد
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="md:col-span-1">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1 mr-1">اسم الدرس</label>
+                    <input type="text" id="lessonName" placeholder="مثال: الفتوحات الإسلامية..."
+                        class="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition-all dark:bg-gray-700 dark:text-white">
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1 mr-1">المادة</label>
+                    <select id="subject"
+                        class="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition-all bg-white dark:bg-gray-700 dark:text-white">
+                        <option value="تاريخ الأردن">تاريخ الأردن</option>
+                        <option value="التربية الإسلامية">التربية الإسلامية</option>
+                        <option value="اللغة العربية">اللغة العربية</option>
+                        <option value="اللغة الإنجليزية">اللغة الإنجليزية</option>
+                    </select>
+                </div>
+                <div class="md:col-span-1">
+                    <label class="block text-xs text-gray-500 dark:text-gray-400 mb-1 mr-1">تاريخ الدراسة</label>
+                    <input type="date" id="lessonDate"
+                        class="w-full p-3 border border-gray-200 dark:border-gray-600 rounded-xl outline-none focus:ring-2 focus:ring-primary-500 transition-all text-gray-600 dark:text-white dark:bg-gray-700">
+                </div>
+                <div class="md:col-span-1 flex items-end">
+                    <button onclick="addLesson()"
+                        class="w-full bg-primary-600 text-white p-3 rounded-xl font-bold hover:bg-primary-700 hover:shadow-lg transition-all active:scale-95 h-[50px]">إضافة
+                        للجدول</button>
+                </div>
+            </div>
+        </div>
+
+        <div
+            class="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
+            <div
+                class="p-5 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800 flex justify-between items-center flex-wrap gap-4">
+                <h2 class="text-lg font-bold text-gray-800 dark:text-white flex items-center">
+                    <span class="ml-2">📊</span> السجل الشامل
+                </h2>
+                <div class="flex gap-3 text-[10px] md:text-xs">
+                    <span class="flex items-center gap-1"><span class="w-2 h-2 bg-primary-500 rounded-full"></span>
+                        منجز</span>
+                    <span class="flex items-center gap-1"><span
+                            class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span> مطلوب</span>
+                    <span class="flex items-center gap-1"><span
+                            class="w-2 h-2 bg-gray-300 dark:bg-gray-600 rounded-full"></span> مغلق</span>
+                </div>
+            </div>
+            <div class="overflow-x-auto">
+                <table class="w-full text-right min-w-[800px]">
+                    <thead
+                        class="bg-gray-50 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 text-xs uppercase font-bold">
+                        <tr>
+                            <th class="p-4 w-1/3 min-w-[200px]">الدرس (اضغط للتلوين)</th>
+                            <th class="p-4">المادة</th>
+                            <th class="p-4 text-center">م1 (1ي)</th>
+                            <th class="p-4 text-center">م2 (4ي)</th>
+                            <th class="p-4 text-center">م3 (10ي)</th>
+                            <th class="p-4 text-center">م4 (25ي)</th>
+                            <th class="p-4 text-center">خيارات</th>
+                        </tr>
+                    </thead>
+                    <tbody id="lessonTableBody"
+                        class="divide-y divide-gray-100 dark:divide-gray-700 text-sm dark:text-gray-200">
+                    </tbody>
+                </table>
+            </div>
+            <div id="emptyState" class="p-12 text-center text-gray-400 hidden">
+                لا توجد دروس مضافة حالياً.
+            </div>
+        </div>
+
+        <div class="mt-8 pt-8 border-t border-gray-200 dark:border-gray-700">
+            <div class="flex justify-center gap-4 flex-wrap">
+                <button onclick="exportData()"
+                    class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors">
+                    💾 تصدير (حفظ)
+                </button>
+                <button onclick="document.getElementById('importFile').click()"
+                    class="flex items-center gap-2 bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 px-4 py-2 rounded-lg text-xs font-bold hover:bg-gray-200 transition-colors">
+                    📂 استيراد
+                </button>
+                <button onclick="clearAll()"
+                    class="flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-600 px-4 py-2 rounded-lg text-xs font-bold hover:bg-red-100 transition-colors">
+                    🗑️ حذف الكل
+                </button>
+            </div>
+            <input type="file" id="importFile" class="hidden" accept=".json" onchange="importData(this)">
+        </div>
+
+    </div>
+
+    <input type="date" id="editDateInput" class="hidden" onchange="confirmDateEdit(this)">
+
+    <script>
+        // --- CONSTANTS & CONFIG ---
+        const STORAGE_KEY = 'spaced_rep_v5_green'; // New key for the new version
+        const SUBJECT_GOALS = {
+            "تاريخ الأردن": 18,
+            "التربية الإسلامية": 25
+        };
+
+        // --- STATE ---
+        let lessons = JSON.parse(localStorage.getItem(STORAGE_KEY)) || [];
+
+        // --- MIGRATION: Update to new 1-4-10-25 system ---
+        function migrateToNewSystem() {
+            let changed = false;
+            lessons = lessons.map(lesson => {
+                // If lesson doesn't have 4 reviews OR missing difficulty, update it
+                if (!lesson.reviews || lesson.reviews.length !== 4 || lesson.difficulty === undefined) {
+                    const baseDate = new Date(lesson.startDate);
+                    const oldReviews = lesson.reviews || [];
+
+                    // Generate new 4 reviews
+                    const newReviews = [
+                        { id: 1, label: '1ي', days: 1, date: getFutureDate(baseDate, 1), done: false },
+                        { id: 2, label: '4ي', days: 4, date: getFutureDate(baseDate, 4), done: false },
+                        { id: 3, label: '10ي', days: 10, date: getFutureDate(baseDate, 10), done: false },
+                        { id: 4, label: '25ي', days: 25, date: getFutureDate(baseDate, 25), done: false }
+                    ];
+
+                    // Try to preserve "done" status by index
+                    oldReviews.forEach((oldRev, idx) => {
+                        if (idx < 4 && oldRev.done) newReviews[idx].done = true;
+                    });
+
+                    lesson.reviews = newReviews;
+                    if (lesson.difficulty === undefined) lesson.difficulty = 0; // 0:default, 1:green, 2:orange, 3:red
+                    changed = true;
+                }
+                return lesson;
+            });
+            if (changed) save();
+        }
+
+        function getFutureDate(base, days) {
+            const d = new Date(base);
+            d.setDate(d.getDate() + days);
+            return d.toISOString();
+        }
+
+        // Run migration
+        migrateToNewSystem();
+
+        let currentEditingId = null;
+        let currentDate = new Date(); // For Calendar
+        // MODIFICATION: Set selected date to today by default
+        let selectedCalendarDate = new Date();
+
+        // --- THEME LOGIC ---
+        function initTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                html.classList.add('dark');
+                icon.innerText = '☀️';
+            } else {
+                html.classList.remove('dark');
+                icon.innerText = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            const html = document.documentElement;
+            const icon = document.getElementById('themeIcon');
+
+            if (html.classList.contains('dark')) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+                icon.innerText = '🌙';
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+                icon.innerText = '☀️';
+            }
+            renderCalendar();
+        }
+
+        // --- INIT ---
+        initTheme();
+        document.getElementById('lessonDate').valueAsDate = new Date();
+        render();
+
+        // --- CORE FUNCTIONS ---
+        function save() {
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
+            render();
+        }
+
+        function addLesson() {
+            const nameEl = document.getElementById('lessonName');
+            const subEl = document.getElementById('subject');
+            const dateEl = document.getElementById('lessonDate');
+
+            if (!nameEl.value.trim() || !dateEl.value) {
+                alert('يرجى تعبئة الاسم والتاريخ');
+                return;
+            }
+
+            const baseDate = new Date(dateEl.value);
+            baseDate.setHours(0, 0, 0, 0);
+
+            const newLesson = {
+                id: Date.now(),
+                name: nameEl.value.trim(),
+                subject: subEl.value,
+                startDate: baseDate.toISOString(),
+                difficulty: 0,
+                reviews: generateReviews(baseDate)
+            };
+
+            lessons.push(newLesson);
+            nameEl.value = '';
+            document.getElementById('lessonDate').valueAsDate = new Date();
+            save();
+        }
+
+        function generateReviews(baseDate) {
+            return [
+                { id: 1, label: '1ي', days: 1, date: getFutureDate(baseDate, 1), done: false },
+                { id: 2, label: '4ي', days: 4, date: getFutureDate(baseDate, 4), done: false },
+                { id: 3, label: '10ي', days: 10, date: getFutureDate(baseDate, 10), done: false },
+                { id: 4, label: '25ي', days: 25, date: getFutureDate(baseDate, 25), done: false }
+            ];
+        }
+
+        function toggleDifficulty(lessonId) {
+            const lesson = lessons.find(l => l.id === lessonId);
+            if (lesson) {
+                lesson.difficulty = (lesson.difficulty + 1) % 4; // Cycles: 0 -> 1 -> 2 -> 3 -> 0
+                save();
+            }
+        }
+
+        function getFutureDate(base, days) {
+            const d = new Date(base);
+            d.setDate(d.getDate() + days);
+            return d.toISOString();
+        }
+
+        function toggleReview(lessonId, reviewId) {
+            const lesson = lessons.find(l => l.id === lessonId);
+            const review = lesson.reviews.find(r => r.id === reviewId);
+
+            if (!isDue(review.date) && !review.done) {
+                const revDate = new Date(review.date).setHours(0, 0, 0, 0);
+                const today = new Date().setHours(0, 0, 0, 0);
+                if (revDate > today) {
+                    alert("عذراً، لم يحن الموعد بعد! 🚫");
+                    return;
+                }
+            }
+
+            review.done = !review.done;
+            save();
+        }
+
+        function deleteLesson(id) {
+            if (confirm('هل أنت متأكد من الحذف؟')) {
+                lessons = lessons.filter(l => l.id !== id);
+                save();
+            }
+        }
+
+        function isDue(dateStr) {
+            const d = new Date(dateStr);
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            return d <= today;
+        }
+
+        // --- ANALYTICS & PROGRESS ---
+        function renderProgress() {
+            const calcSubjectStats = (subjectName, totalGoal) => {
+                const subjectLessons = lessons.filter(l => l.subject === subjectName);
+                const count = subjectLessons.length;
+
+                const sorted = [...subjectLessons].sort((a, b) => new Date(a.startDate) - new Date(b.startDate));
+
+                let rate = 0;
+                let predictedDateStr = "غير متاح";
+
+                if (count > 0) {
+                    const firstDate = new Date(sorted[0].startDate);
+                    const today = new Date();
+                    const daysDiff = Math.max(1, Math.floor((today - firstDate) / (1000 * 60 * 60 * 24)));
+
+                    rate = count / daysDiff;
+
+                    if (count < totalGoal) {
+                        const remaining = totalGoal - count;
+                        const daysToFinish = Math.ceil(remaining / rate);
+                        const finishDate = new Date();
+                        finishDate.setDate(finishDate.getDate() + daysToFinish);
+                        predictedDateStr = `متوقع الختم: ${finishDate.toLocaleDateString('ar-EG')}`;
+                    } else {
+                        predictedDateStr = "تم ختم المادة! 🎉";
+                    }
+                }
+
+                return { count, rate: rate.toFixed(2), predictedDateStr, percentage: (count / totalGoal) * 100 };
+            };
+
+            const histData = calcSubjectStats("تاريخ الأردن", SUBJECT_GOALS["تاريخ الأردن"]);
+            document.getElementById('prog-history').classList.remove('hidden');
+            document.getElementById('bar-history').style.width = `${Math.min(100, histData.percentage)}%`;
+            document.getElementById('stat-history-count').innerText = `${histData.count} / ${SUBJECT_GOALS["تاريخ الأردن"]}`;
+            document.getElementById('stat-history-rate').innerText = `${histData.rate} درس/يوم`;
+            document.getElementById('pred-history').innerText = histData.predictedDateStr;
+
+            const islData = calcSubjectStats("التربية الإسلامية", SUBJECT_GOALS["التربية الإسلامية"]);
+            document.getElementById('prog-islamic').classList.remove('hidden');
+            document.getElementById('bar-islamic').style.width = `${Math.min(100, islData.percentage)}%`;
+            document.getElementById('stat-islamic-count').innerText = `${islData.count} / ${SUBJECT_GOALS["التربية الإسلامية"]}`;
+            document.getElementById('stat-islamic-rate').innerText = `${islData.rate} درس/يوم`;
+            document.getElementById('pred-islamic').innerText = islData.predictedDateStr;
+        }
+
+        // --- CALENDAR LOGIC ---
+        function changeMonth(delta) {
+            currentDate.setMonth(currentDate.getMonth() + delta);
+            renderCalendar();
+        }
+
+        function renderCalendar() {
+            const grid = document.getElementById('calendarGrid');
+            const monthNameEl = document.getElementById('calMonthName');
+            grid.innerHTML = '';
+
+            const year = currentDate.getFullYear();
+            const month = currentDate.getMonth();
+
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            const monthsAr = ["يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو", "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"];
+            monthNameEl.innerText = `${monthsAr[month]} ${year}`;
+
+            const startDayIndex = firstDay.getDay();
+
+            for (let i = 0; i < startDayIndex; i++) {
+                const div = document.createElement('div');
+                grid.appendChild(div);
+            }
+
+            const realToday = new Date();
+
+            for (let d = 1; d <= lastDay.getDate(); d++) {
+                const dateCheck = new Date(year, month, d);
+                const dateStr = dateCheck.toDateString();
+
+                let eventCount = 0;
+                lessons.forEach(l => l.reviews.forEach(r => {
+                    const rDate = new Date(r.date);
+                    if (rDate.toDateString() === dateStr && !r.done) {
+                        eventCount++;
+                    }
+                }));
+
+                let eventClass = '';
+                if (eventCount >= 5) eventClass = 'has-event-high';
+                else if (eventCount >= 3) eventClass = 'has-event-med';
+                else if (eventCount >= 1) eventClass = 'has-event-low';
+
+                const dayEl = document.createElement('div');
+                dayEl.className = `calendar-day rounded-lg flex flex-col items-center justify-center text-gray-700 dark:text-gray-300 ${eventClass}`;
+                dayEl.innerText = d;
+
+                // Highlight Selected
+                if (selectedCalendarDate && selectedCalendarDate.toDateString() === dateStr) {
+                    dayEl.classList.add('active');
+                }
+
+                // MARK TODAY (Added Feature)
+                if (realToday.toDateString() === dateStr) {
+                    dayEl.classList.add('is-today');
+                    // Add small tooltip/title
+                    dayEl.title = "اليوم";
+                }
+
+                dayEl.onclick = () => {
+                    selectedCalendarDate = dateCheck;
+                    renderCalendar();
+                    showCalendarTasks(dateCheck);
+                };
+
+                grid.appendChild(dayEl);
+            }
+        }
+
+        function showCalendarTasks(dateObj) {
+            const container = document.getElementById('calendarTasks');
+            const title = document.getElementById('selectedDateTitle');
+
+            const dateStr = dateObj.toLocaleDateString('ar-EG');
+            title.innerText = `مراجعات ${dateStr}:`;
+
+            container.innerHTML = '';
+
+            const tasks = [];
+            lessons.forEach(l => {
+                l.reviews.forEach(r => {
+                    const rDate = new Date(r.date);
+                    if (rDate.toDateString() === dateObj.toDateString()) {
+                        tasks.push({ lesson: l, review: r });
+                    }
+                });
+            });
+
+            if (tasks.length === 0) {
+                container.innerHTML = `<p class="text-xs text-gray-400 text-center">لا يوجد مراجعات لهذا اليوم.</p>`;
+                return;
+            }
+
+            tasks.forEach(task => {
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-gray-50 dark:bg-gray-700 p-2 rounded border border-gray-100 dark:border-gray-600";
+                div.innerHTML = `
+                    <div>
+                        <div class="font-bold text-xs dark:text-gray-200">${task.lesson.name}</div>
+                        <div class="text-[10px] text-gray-500 dark:text-gray-400">${task.lesson.subject} (${task.review.label})</div>
                     </div>
+                    ${task.review.done
+                        ? '<span class="text-green-500 text-xs font-bold">✓</span>'
+                        : '<span class="text-red-500 text-xs font-bold">انتظار</span>'}
+                `;
+                container.appendChild(div);
+            });
+        }
 
-                    <div class="manual-controls hidden" id="manual-controls">
-                        <button class="manual-btn" id="manual-wake-btn">
-                            <i class="fas fa-sun"></i>
-                            <span>انا مستيقظ (يدوي)</span>
+        // --- MAIN RENDER ---
+        function render() {
+            const tbody = document.getElementById('lessonTableBody');
+            const tasksContainer = document.getElementById('todayTasksContainer');
+            const summaryDiv = document.getElementById('dailySummary');
+            const greetingH1 = document.getElementById('dailyGreeting');
+            const emptyState = document.getElementById('emptyState');
+            const noTasksMsg = document.getElementById('noTasksMsg');
+
+            tbody.innerHTML = '';
+            tasksContainer.innerHTML = '';
+
+            let todayPending = 0;
+
+            const sortedLessons = [...lessons].sort((a, b) => b.id - a.id);
+
+            sortedLessons.forEach(lesson => {
+                const tr = document.createElement('tr');
+                let reviewCells = '';
+
+                lesson.reviews.forEach(rev => {
+                    const due = isDue(rev.date);
+                    let statusClass = '';
+                    let disabledAttr = '';
+
+                    if (rev.done) {
+                        statusClass = 'step-done';
+                    } else if (due) {
+                        statusClass = 'step-pending';
+                    } else {
+                        statusClass = 'step-future';
+                        disabledAttr = 'disabled';
+                    }
+
+                    const dateObj = new Date(rev.date);
+
+                    if (due && !rev.done) {
+                        todayPending++;
+                        const card = document.createElement('div');
+                        card.className = "bg-white dark:bg-gray-700 p-4 rounded-xl border-r-4 border-red-500 shadow-sm flex justify-between items-center";
+                        card.innerHTML = `
+                            <div>
+                                <div class="text-[10px] text-primary-500 dark:text-primary-300 font-bold mb-1">${lesson.subject}</div>
+                                <div class="font-bold text-gray-800 dark:text-white">${lesson.name}</div>
+                                <div class="text-xs text-gray-400 mt-1">المراجعة: ${rev.label}</div>
+                            </div>
+                            <button onclick="toggleReview(${lesson.id}, ${rev.id})" class="bg-primary-50 dark:bg-primary-900/30 text-primary-600 dark:text-primary-300 px-3 py-2 rounded-lg text-xs font-bold hover:bg-primary-600 hover:text-white transition-colors">إتمام</button>
+                        `;
+                        tasksContainer.appendChild(card);
+                    }
+
+                    reviewCells += `
+                        <td class="p-4 text-center">
+                            <div class="flex flex-col items-center gap-1">
+                                <button onclick="toggleReview(${lesson.id}, ${rev.id})" 
+                                        class="progress-step ${statusClass}" 
+                                        ${disabledAttr}
+                                        title="${dateObj.toLocaleDateString('ar-EG')}">
+                                    ${rev.done ? '✓' : (due ? rev.label : '🔒')}
+                                </button>
+                                <span class="text-[9px] text-gray-400 dark:text-gray-500 dir-ltr">${dateObj.getDate()}/${dateObj.getMonth() + 1}</span>
+                            </div>
+                        </td>
+                    `;
+                });
+
+                const diffClasses = ['diff-default', 'diff-low', 'diff-medium', 'diff-high'];
+                const currentDiffClass = diffClasses[lesson.difficulty] || 'diff-default';
+
+                tr.innerHTML = `
+                    <td class="p-4">
+                        <span onclick="toggleDifficulty(${lesson.id})" class="cursor-pointer font-bold ${currentDiffClass} text-sm md:text-base hover:opacity-80 transition-opacity">${lesson.name}</span>
+                    </td>
+                    <td class="p-4 text-primary-600 dark:text-primary-400 font-medium text-xs whitespace-nowrap">${lesson.subject}</td>
+                    ${reviewCells}
+                    <td class="p-4 text-center">
+                        <button onclick="deleteLesson(${lesson.id})" class="text-gray-300 hover:text-red-500 transition-colors">
+                            ❌
                         </button>
-                    </div>
-                </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
 
-                <div class="controls main-controls">
-                    <button class="control-btn start" id="sleep-start-btn">
-                        <i class="fas fa-moon"></i>
-                    </button>
-                    <button class="control-btn pause hidden" id="sleep-stop-btn">
-                        <i class="fas fa-stop"></i>
-                    </button>
-                </div>
-            </section>
+            // Dashboard Text
+            if (todayPending > 0) {
+                greetingH1.innerText = "همة عالية يا بطل! 💪";
+                summaryDiv.innerHTML = `لديك <span class="text-yellow-300 font-bold text-lg">${todayPending}</span> مراجعات مستحقة اليوم.`;
+                noTasksMsg.classList.add('hidden');
+            } else {
+                greetingH1.innerText = "أنت مسيطر! 🦁";
+                summaryDiv.innerHTML = lessons.length > 0 ? "جميع المراجعات الحالية مكتملة." : "ابدأ بإضافة الدروس.";
+                if (lessons.length > 0) noTasksMsg.classList.remove('hidden');
+            }
 
-            <!-- Stopwatch Section --> <!-- Keeping original order -->
-            <section id="stopwatch-section">
-                <div class="section-title">ساعة الإيقاف</div>
-                <div class="stopwatch-display" id="stopwatch-display">
-                    00:00.00
-                </div>
-                <div class="controls">
-                    <button class="control-btn start" id="stopwatch-start"><i class="fas fa-play"></i></button>
-                    <button class="control-btn pause hidden" id="stopwatch-pause"><i class="fas fa-pause"></i></button>
-                    <button class="control-btn reset" id="stopwatch-reset"><i class="fas fa-undo"></i></button>
-                    <button class="control-btn lap" id="stopwatch-lap"><i class="fas fa-flag"></i></button>
-                </div>
-                <div class="laps-list" id="laps-list"></div>
-            </section>
-        </main>
+            if (lessons.length === 0) emptyState.classList.remove('hidden');
+            else emptyState.classList.add('hidden');
 
-        <!-- Navigation Bar -->
-        <nav class="bottom-nav">
-            <button class="nav-item active" data-target="clock-section">
-                <i class="fas fa-clock"></i>
-                <span>الساعة</span>
-            </button>
-            <button class="nav-item" data-target="alarm-section">
-                <i class="fas fa-bell"></i>
-                <span>المنبه</span>
-            </button>
-            <button class="nav-item" data-target="sleep-section">
-                <i class="fas fa-bed"></i>
-                <span>النوم</span>
-            </button>
-            <button class="nav-item" data-target="timer-section">
-                <i class="fas fa-hourglass-half"></i>
-                <span>المؤقت</span>
-            </button>
-            <button class="nav-item" data-target="stopwatch-section">
-                <i class="fas fa-stopwatch"></i>
-                <span>الإيقاف</span>
-            </button>
-        </nav>
-    </div>
+            renderProgress();
+            renderCalendar();
 
-    <!-- Alarm Modal -->
-    <div id="alarm-modal" class="modal hidden">
-        <div class="modal-content">
-            <h3>اضافة منبه جديد</h3>
-            <div class="time-picker">
-                <input type="time" id="alarm-time-input">
-            </div>
-            <div class="modal-actions">
-                <button id="cancel-alarm" class="modal-btn cancel">إلغاء</button>
-                <button id="save-alarm" class="modal-btn save">حفظ</button>
-            </div>
-        </div>
-    </div>
+            // MODIFICATION: Update Calendar Task List if a date is selected (which is now Today by default)
+            if (selectedCalendarDate) {
+                showCalendarTasks(selectedCalendarDate);
+            }
+        }
 
-    <!-- Alarm Ringing Overlay -->
-    <!-- Sensor Test Modal -->
-    <div id="sensor-modal" class="modal hidden">
-        <div class="modal-content sensor-content">
-            <h3>اختبار الحساسات</h3>
-            <button id="enable-sensors-btn" class="modal-btn save"
-                style="width:100%; margin-bottom:15px; background:var(--primary-light)">تفعيل الحساسات (اضغط
-                هنا)</button>
-            <div class="sensor-readout">
-                <div class="axis-row">
-                    <span>Motion X:</span> <span id="acc-x" class="mono">0.00</span>
-                </div>
-                <div class="axis-row">
-                    <span>Motion Y:</span> <span id="acc-y" class="mono">0.00</span>
-                </div>
-                <div class="axis-row">
-                    <span>Motion Z:</span> <span id="acc-z" class="mono">0.00</span>
-                </div>
-                <div class="axis-row highlight">
-                    <span>الحركة:</span> <span id="acc-total" class="mono">0.00</span>
-                </div>
-                <hr style="border-color:var(--glass-border); margin:10px 0;">
-                <div class="axis-row">
-                    <span>Alpha (Tilt):</span> <span id="orient-alpha" class="mono">0</span>
-                </div>
-                <div class="axis-row">
-                    <span>Beta (Tilt):</span> <span id="orient-beta" class="mono">0</span>
-                </div>
-                <div class="axis-row">
-                    <span>Gamma (Tilt):</span> <span id="orient-gamma" class="mono">0</span>
-                </div>
-            </div>
-            <div class="sensor-graph-bar">
-                <div id="sensor-bar-fill" style="width: 0%"></div>
-            </div>
-            <p id="sensor-status" style="font-size:0.8rem; color:#ef5350;">ملاحظة: يتطلب HTTPS أو localhost</p>
-            <button id="close-sensor-modal" class="modal-btn cancel" style="width:100%; margin-top:15px">إغلاق</button>
-        </div>
-    </div>
-
-    <div id="alarm-ringing" class="ringing-overlay hidden">
-        <div class="ringing-content">
-            <i class="fas fa-bell fa-shake"></i>
-            <h2>وقت التنبيه!</h2>
-            <button id="stop-alarm" class="stop-alarm-btn">إيقاف</button>
-        </div>
-    </div>
-
-    <script src="script.js"></script>
+        // --- EXPORT/IMPORT/CLEAR ---
+        function clearAll() {
+            if (confirm('حذف جميع البيانات؟')) {
+                lessons = [];
+                save();
+            }
+        }
+        function exportData() {
+            const dataStr = JSON.stringify(lessons, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `مراجعات_${new Date().toISOString().slice(0, 10)}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+        }
+        function importData(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = function (e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if (Array.isArray(data)) {
+                        if (confirm('استبدال البيانات الحالية؟')) {
+                            lessons = data;
+                            save();
+                            alert('تم الاستيراد بنجاح');
+                        }
+                    }
+                } catch (err) { alert('ملف غير صالح'); }
+                input.value = '';
+            };
+            reader.readAsText(file);
+        }
+    </script>
 </body>
 
 </html>
